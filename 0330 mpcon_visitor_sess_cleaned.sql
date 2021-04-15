@@ -133,10 +133,10 @@ order by 1, 2, 3, 4;
 -- 5 union 4a and 4b to create source table for tableau analysis
 
 -- -- Updated Rows	14,262,331
-create table wandajuan.mpcon_sess_raw_v2 as ( 
+create table wandajuan.mpcon_sess_raw_v3 as ( 
 select session_id, visitor_id, dt, visitor_type, first_platform, first_channel, medium as first_medium, 'No repeat' as repeat_times,
         if_mpl_session, if_view_product, if_cart_add, if_xo_confirm,
-        signin_status, device_cat, medium, landing_page_class, usr_sess_cnt, 1 as rnum
+        signin_status, device_cat, medium, first_channel AS sess_channel, landing_page_class, usr_sess_cnt, 1 as rnum
 from (
     select *,
                 if(device_cat='Personal computer', 'dWeb', 'mWeb') as first_platform, 
@@ -168,7 +168,7 @@ union all
 
 select session_id, visitor_id, dt, visitor_type, first_platform, first_channel, first_medium, repeat_times,
         if_mpl_session, if_view_product, if_cart_add, if_xo_confirm,
-        signin_status, device_cat, medium, landing_page_class, usr_sess_cnt, rnum 
+        signin_status, device_cat, medium, sess_channel, landing_page_class, usr_sess_cnt, rnum 
 from (
     select s.*, --s.session_id, s.visitor_id, s.dt, s.device_cat, --s.first_dt, --s.signin_status,
          --   f.vis_sess_cnt,
@@ -184,6 +184,10 @@ from (
             case when f.medium = 'SEARCH' and f.landing_page_class in ('BROWSE_PRODUCTS', 'VIEW_PRODUCT', 'VIEW_CART', 'pvp', 'CHECKOUT_ACTION') then 'SEO - MP'
                 when f.medium = 'SEARCH' then 'SEO - Other'
                 else f.medium end as first_channel, 
+            
+            case when s.medium = 'SEARCH' and s.landing_page_class in ('BROWSE_PRODUCTS', 'VIEW_PRODUCT', 'VIEW_CART', 'pvp', 'CHECKOUT_ACTION') then 'SEO - MP'
+                when s.medium = 'SEARCH' then 'SEO - Other'
+                else s.medium end as sess_channel, 
 
 
             if(sum(if(s.signin_status!='SIGNED_OUT', 1, 0)) over (partition by s.visitor_id)>1, 'Signed-in User', 'Visitor') as visitor_type,
@@ -230,7 +234,7 @@ from (
 		if(sum(if_view_product)>0, 1, 0) as if_view_product,
 		if(sum(if_cart_add)>0, 1, 0) as if_cart_add,
 		if(sum(if_xo_confirm)>0, 1, 0) as if_xo_confirm
-	from wandajuan.mpcon_sess_raw
+	from wandajuan.mpcon_sess_raw_v2
 	group by 1, 2, 3, 4, 5, 6
 	)
 group by 1, 2, 3, 4, 5
