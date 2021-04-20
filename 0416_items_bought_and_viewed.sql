@@ -88,5 +88,5 @@ select distinct * from wandajuan.mpcon_items_bought_viewed
 );
 
 
-create table wandajuan.mpcon_items_bought_viewed_distinct as (
-select distinct * from wandajuan.mpcon_items_bought_viewed);
+create table wandajuan.mpcon_items_bought_viewed_distinct as ( -- an ordered item could have multiple times of product views on a number of the same items
+select distinct * from wandajuan.mpcon_items_bought_viewed); -- remove same products viewed 
